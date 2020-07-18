@@ -1,2 +1,2 @@
 # Travel Blog 
-Hi! This is my **first** WordPress theme
+My **first** WordPress theme from design and landing to Back-End on WordPress
