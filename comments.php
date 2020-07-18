@@ -15,17 +15,46 @@
  * the visitor has not yet entered the password we will
  * return early without loading the comments.
  */
-if ( post_password_required() ) {
-	return;
-}
+if ( post_password_required() )
+	return; 
 ?>
 
 <div id="comments" class="comments-area">
+	<div class="post-full__comments comments">
+		<?php
+		comment_form([
+			'fields' => [
+				'author' => "<p class='comment-form-author'>
+											<label for='author'>" . __('Name') . '</label> ' . ($req ? '<span class="required">*</span>' : '') .
+											"<input id='author' name='author' type='text' value='" . esc_attr($commenter['comment_author']) . "' size='30' />
+										</p>",
 
-	<?php
-	// You can start editing here -- including this comment!
-	if ( have_comments() ) :
+				'email'  => '<p class="comment-form-email">
+											<label for="email">' . __('Email') . '</label> ' . ($req ? '<span class="required">*</span>' : '') .
+											"<input id='email' name='email' type='text' value='".esc_attr($commenter['comment_author_email'])."' size='30' />
+										</p>",
+
+				'url'    => '<p class="comment-form-url">
+											<label for="url">' . __( 'Website' ) . '</label>' .
+											"<input id='url' name='url' type='text' value='" . esc_attr( $commenter['comment_author_url'] ) . "' size='30'/>
+										</p>"
+			],
+
+			'comment_field' => '
+				<label for="reply">Comment</label>
+				<textarea id="comment" name="comment" cols="30" rows="8" aria-required="true"></textarea>
+			',
+
+			'submit_button' => '
+				<button type="submit" class="action-button">Post the comment</button>
+			',
+
+			'class_form'    => 'comments reply-form'
+		]);
 		?>
+	</div>
+
+	<?php if ( have_comments() ): ?>
 		<h2 class="comments-title">
 			<?php
 			$travel_blog_comment_count = get_comments_number();
@@ -47,17 +76,21 @@ if ( post_password_required() ) {
 		</h2><!-- .comments-title -->
 
 		<?php the_comments_navigation(); ?>
+		
+		<ul class="comments__list" data-depth="0">
+			<?php 
+			$postComments = get_comments([
+				'post_id'      => $post->ID,
+				'status'       => 'approve',
+				'hierarchical' => false
+			]);
 
-		<ol class="comment-list">
-			<?php
-			wp_list_comments(
-				array(
-					'style'      => 'ol',
-					'short_ping' => true,
-				)
-			);
+			foreach ($postComments as $comment) {
+				if ($comment->comment_parent == 0)
+					echo apply_filters('travel_blog_nested_comments', $comment, $post);
+			}
 			?>
-		</ol><!-- .comment-list -->
+		</ul>
 
 		<?php
 		the_comments_navigation();
@@ -70,8 +103,21 @@ if ( post_password_required() ) {
 		endif;
 
 	endif; // Check for have_comments().
-
-	comment_form();
 	?>
-
 </div><!-- #comments -->
+
+<!-- 
+	<button class="comment-item__reply">Reply</button>
+
+	<div class="reply-container">
+		<form action="" method="post" class="comments reply-form">
+			<label for="name">Full name</label>
+			<input type="text" id="name" name="name">
+			<label for="email">Email <small>(it won't be displayed)</small></label>
+			<input type="text" id="email" name="email">
+			<label for="reply">Comment</label>
+			<textarea name="reply" id="reply" cols="30" rows="7"></textarea>
+			<button type="submit" class="action-button">Post the comment</button>
+		</form>
+	</div>
+ -->

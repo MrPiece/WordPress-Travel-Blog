@@ -1,59 +1,101 @@
-<?php
-/**
- * The header for our theme
- *
- * This is the template that displays all of the <head> section and everything up until <div id="content">
- *
- * @link https://developer.wordpress.org/themes/basics/template-files/#template-partials
- *
- * @package Travel_Blog
- */
-
-?>
-<!doctype html>
-<html <?php language_attributes(); ?>>
+<!DOCTYPE html>
+<html lang="<?php language_attributes() ?>">
 <head>
-	<meta charset="<?php bloginfo( 'charset' ); ?>">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="profile" href="https://gmpg.org/xfn/11">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <?php wp_head() ?>
 
-	<?php wp_head(); ?>
+  <?php if ( is_user_logged_in() ): ?>
+    <style>
+      #slideout-menu {
+        padding-top: 52px;
+      }
+
+      @media (max-width: 782px) {
+        #slideout-menu {
+          padding-top: 66px;
+        }
+      }
+    </style>
+  <?php endif ?>
+
+  <title><?php wp_title() ?></title>
 </head>
 
-<body <?php body_class(); ?>>
-<?php wp_body_open(); ?>
-<div id="page" class="site">
-	<a class="skip-link screen-reader-text" href="#primary"><?php esc_html_e( 'Skip to content', 'travel-blog' ); ?></a>
+<body>
+  <nav id="slideout-menu">
+    <ul class="links-list">
+      <li class="menu-item"><a href="<?= get_home_url() . '/contact/' ?>" class="link-title">Learn more</a></li>
+      <?php
+      $menu_args = [
+        'theme_location'  => 'mobile-about',
+        'menu'            => 'mobile_about',
+        'menu_class'      => 'links-list',
+        'items_wrap'      => '<ul id="%1$s" class="%2$s">%3$s</ul>',
+        'echo'            => true,
+      ];
+      wp_nav_menu($menu_args); 
+      ?>
+    </ul>
 
-	<header id="masthead" class="site-header">
-		<div class="site-branding">
-			<?php
-			the_custom_logo();
-			if ( is_front_page() && is_home() ) :
-				?>
-				<h1 class="site-title"><a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"><?php bloginfo( 'name' ); ?></a></h1>
-				<?php
-			else :
-				?>
-				<p class="site-title"><a href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home"><?php bloginfo( 'name' ); ?></a></p>
-				<?php
-			endif;
-			$travel_blog_description = get_bloginfo( 'description', 'display' );
-			if ( $travel_blog_description || is_customize_preview() ) :
-				?>
-				<p class="site-description"><?php echo $travel_blog_description; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
-			<?php endif; ?>
-		</div><!-- .site-branding -->
+    <hr>
 
-		<nav id="site-navigation" class="main-navigation">
-			<button class="menu-toggle" aria-controls="primary-menu" aria-expanded="false"><?php esc_html_e( 'Primary Menu', 'travel-blog' ); ?></button>
-			<?php
-			wp_nav_menu(
-				array(
-					'theme_location' => 'menu-1',
-					'menu_id'        => 'primary-menu',
-				)
-			);
-			?>
-		</nav><!-- #site-navigation -->
-	</header><!-- #masthead -->
+    <ul class="links-list">
+      <li class="menu-item"><a href="<?= get_home_url() . '/blog/' ?>" class="link link-title">Blog</a></li>
+      <?php
+      $menu_args = [
+        'theme_location'  => 'mobile-blog',
+        'menu'            => 'mobile_blog',
+        'menu_class'      => 'links-list',
+        'items_wrap'      => '<ul id="%1$s" class="%2$s">%3$s</ul>',
+        'echo'            => true,
+      ];
+      wp_nav_menu($menu_args); 
+      ?>
+    </ul>
+
+    <hr>
+
+    <ul class="social-links">
+      <a href="<?= get_custom('facebook_link') ?>"><i class="fab fa-facebook-f"></i></a>
+      <a href="<?= get_custom('twitter_link') ?>"><i class="fab fa-twitter"></i></a>
+      <a href="<?= get_custom('instagram_link') ?>"><i class="fab fa-instagram"></i></a>
+      <a href="<?= get_custom('pinterest_link') ?>"><i class="fab fa-pinterest-p"></i></a>
+      <a href="<?= get_home_url() . '/contact/' ?>"><i class="fas fa-envelope"></i></a>
+    </ul>
+  </nav>
+
+  <div id="slideout-panel">
+    <header class="header">
+      <div class="container">
+        <nav class="header__nav">
+          <h2 class="header__brand">
+            <a href="<?= get_home_url() ?>"><?php bloginfo('name') ?></a>
+          </h2>
+	
+					<?php 
+					$menu_args = [
+						'theme_location'  => 'header',
+						'menu'            => 'header_menu',
+						'menu_class'      => 'links-list',
+						'items_wrap'      => '<ul id="%1$s" class="%2$s">%3$s</ul>',
+						'echo'            => true,
+					];
+					wp_nav_menu($menu_args); 
+					
+					
+					get_search_form();
+					?>
+  
+          <i class="fas fa-bars header__menu-icon"></i>
+  
+          <i class="fas fa-search header__search-mobile-icon" id="search-icon"></i>
+          <form class="header__search-mobile" id="mobile-search" action="#" method="get">
+            <input class="header__search-mobile-input" type="search" placeholder="Search...">
+            <button type="submit" class="header__search-mobile-button">
+              <i class="fas fa-search search-icon header__search-icon"></i>
+            </button>
+          </form>
+        </nav>
+      </div>
+		</header>

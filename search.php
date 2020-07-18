@@ -1,53 +1,131 @@
-<?php
-/**
- * The template for displaying search results pages
- *
- * @link https://developer.wordpress.org/themes/basics/template-hierarchy/#search-result
- *
- * @package Travel_Blog
- */
+<?php get_header() ?>
 
-get_header();
-?>
+<main>
+  <div class="container">   
+    <section class="blog blog-singular">
+      <div class="posts">
+				<?php
+				$search = esc_sql( wp_kses($_GET['s'], '' ) );
 
-	<main id="primary" class="site-main">
+				// Checking for taxonomies
+				$args = [
+					'post_type' => 'post',
+					'tax_query' => [
+						'relation' => 'OR',
+						[
+							'taxonomy' => 'post_tag',
+							'field'    => 'name',
+							'terms'    => $search
+						],
+						[
+							'taxonomy' => 'category',
+							'field'    => 'name',
+							'terms'    => $search
+						],
+						[
+							'taxonomy' => 'country',
+							'field'    => 'name',
+							'terms'    => $search
+						]
+					],
+					'nopaging' => true
+				];
 
-		<?php if ( have_posts() ) : ?>
+				$postsByTaxonomy = new WP_Query($args);
 
-			<header class="page-header">
-				<h1 class="page-title">
-					<?php
-					/* translators: %s: search query. */
-					printf( esc_html__( 'Search Results for: %s', 'travel-blog' ), '<span>' . get_search_query() . '</span>' );
-					?>
-				</h1>
-			</header><!-- .page-header -->
+				$args = [
+					'post_type' => 'post',
+					'title'     => $search
+				];
 
-			<?php
-			/* Start the Loop */
-			while ( have_posts() ) :
-				the_post();
+				global $wpdb;
 
-				/**
-				 * Run the loop for the search to output the results.
-				 * If you want to overload this in a child theme then include a file
-				 * called content-search.php and that will be used instead.
-				 */
-				get_template_part( 'template-parts/content', 'search' );
+				$searchQuery = $wpdb->esc_like($search);
+				$searchQuery = '%' . $searchQuery . '%';
 
-			endwhile;
+				$postsByTitle = $wpdb->get_results( 
+					$wpdb->prepare("
+						SELECT * FROM $wpdb->posts
+						WHERE `post_title` LIKE '%s'
+						AND `post_status` = 'publish'
+					  AND `post_type` = 'post'
+					", $searchQuery) 
+				);
 
-			the_posts_navigation();
+				$posts = array_merge( $postsByTaxonomy->get_posts(), $postsByTitle );
 
-		else :
+				$uniqueIDs = [];
+				$posts = array_filter($posts, function($post, $k) {
+					global $uniqueIDs;
 
-			get_template_part( 'template-parts/content', 'none' );
+					if ( in_array( $post->ID, $uniqueIDs ) )
+						return false;
+					else {
+						array_push($uniqueIDs, $post->ID);
+						return true;
+					}
+				}, ARRAY_FILTER_USE_BOTH);
 
-		endif;
-		?>
+				if ( !empty($posts) ): 
+				?>
+					<header class="search-results singular-header">
+						<h2>
+							<?php
+							printf( esc_html__( 'Search Results for: %s', 'travel-blog' ), '<span>' . $search . '</span>' );
+							?>
+						</h2>
+					</header>
 
-	</main><!-- #main -->
+					<?php foreach ( $posts as $post ): setup_postdata($post) ?>		
+						<article class="card post">
+							<a href="<?php the_permalink() ?>" class="post__img-wrapper">
+								<?php the_post_thumbnail() ?>
+							</a>
 
-<?php
-get_sidebar();
-get_footer();
+							<div class="post__content">
+								<a href="<?php the_permalink() ?>" class="post__title"><?php the_title() ?></a>
+
+								<div class="post__tags">
+									<?php $postTags = get_the_terms($post->ID, 'post_tag');
+									foreach ($postTags as $tag): ?>
+										<a href="<?= get_tag_link($tag) ?>" class="post__tag"><?= $tag->name ?></a>
+									<?php endforeach ?>
+								</div>
+
+								<p class="post__excerpt">
+									<?php the_excerpt() ?>
+								</p>
+
+								<div class="post__stats">
+									<div class="post__likes-count">
+										<i class="fas fa-heart"></i>
+										<span><?= wp_ulike_get_post_likes( $post->ID ) ?></span>
+									</div>
+
+									<div class="post__comments-count">
+										<i class="fas fa-comment"></i>
+										<span><?= get_comments_number( $post->ID ) ?></span>
+									</div>
+
+									<div class="post__views-count">
+										<i class="fas fa-eye"></i>
+										<span><?= pvc_get_post_views( $post->ID ) ?></span>
+									</div>
+								</div>
+							</div>
+						</article>
+					<?php endforeach;
+					wp_reset_query();
+					wp_reset_postdata();
+				else: ?>
+          <div style="grid-column: 1/4;">
+            <h2>Sorry, there are no such posts!</h2>
+            <p style="text-align: center;">Take me back to <a href="<?= get_home_url() . '/blog/' ?>">blog page</a></p>
+          </div>
+        <?php endif ?>
+      </div>
+    </section>
+  </div>
+</main>
+
+<?php get_footer() ?>
